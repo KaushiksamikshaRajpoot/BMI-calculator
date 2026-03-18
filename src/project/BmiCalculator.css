@@ -1,0 +1,444 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f7fb;
+}
+
+.bmi-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 28px;
+  padding: 40px 24px;
+  background: linear-gradient(135deg, #f5f8ff, #fff8ef);
+  flex-wrap: wrap;
+}
+
+.bmi-card,
+.tips-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 22px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 28px;
+}
+
+.bmi-card {
+  width: 720px;
+  max-width: 100%;
+}
+
+.tips-card {
+  width: 520px;
+  max-width: 100%;
+  min-height: 700px;
+}
+
+.bmi-title {
+  text-align: center;
+  font-size: 52px;
+  font-weight: 800;
+  color: #2f3a4a;
+  margin-bottom: 24px;
+}
+
+.unit-toggle {
+  display: flex;
+  background: #f2f4f8;
+  border-radius: 40px;
+  padding: 6px;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.toggle-btn {
+  flex: 1;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 18px;
+  font-size: 22px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #5c6470;
+  transition: 0.3s ease;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(90deg, #0a97ff, #1680ff);
+  color: white;
+  box-shadow: 0 4px 12px rgba(22, 128, 255, 0.25);
+}
+
+.form-section {
+  margin-top: 10px;
+}
+
+.section-label {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12px;
+  margin-top: 18px;
+}
+
+.input-row {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.input-box {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-box input {
+  width: 100%;
+  height: 64px;
+  border: 1.5px solid #d7dee7;
+  border-radius: 16px;
+  outline: none;
+  padding: 0 56px 0 18px;
+  font-size: 24px;
+  color: #374151;
+  background: #ffffff;
+  transition: 0.2s ease;
+}
+
+.input-box input:focus {
+  border-color: #1680ff;
+  box-shadow: 0 0 0 4px rgba(22, 128, 255, 0.1);
+}
+
+.input-box input::placeholder {
+  color: #a0a8b5;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.unit-text {
+  position: absolute;
+  right: 18px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #7b8494;
+  pointer-events: none;
+}
+
+.calculate-btn {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  padding: 18px;
+  margin-top: 18px;
+  margin-bottom: 24px;
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  background: linear-gradient(90deg, #0aa2ff, #157eff);
+  box-shadow: 0 8px 20px rgba(21, 126, 255, 0.25);
+  transition: 0.3s ease;
+}
+
+.calculate-btn:hover {
+  transform: translateY(-2px);
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.gauge-card {
+  background: #fdfefe;
+  border-radius: 18px;
+  padding: 24px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gauge-wrapper {
+  position: relative;
+  width: 420px;
+  max-width: 100%;
+  height: 220px;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+
+.gauge-segment {
+  position: absolute;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  clip-path: inset(0 0 50% 0);
+  border: 34px solid transparent;
+  border-bottom: none;
+  top: 0;
+  left: 0;
+}
+
+.underweight-segment {
+  border-top-color: #53c5e8;
+  border-left-color: #53c5e8;
+  transform: rotate(-45deg);
+}
+
+.healthy-segment {
+  border-top-color: #7bd9a5;
+  border-left-color: #7bd9a5;
+  transform: rotate(0deg);
+}
+
+.overweight-segment {
+  border-top-color: #f2cf63;
+  border-left-color: #f2cf63;
+  transform: rotate(45deg);
+}
+
+.obese-segment {
+  border-top-color: #f28a8a;
+  border-left-color: #f28a8a;
+  transform: rotate(90deg);
+}
+
+.gauge-needle {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  width: 0;
+  height: 150px;
+  transform-origin: bottom center;
+  transition: transform 0.6s ease;
+}
+
+.needle-line {
+  width: 8px;
+  height: 110px;
+  background: #3c7ea6;
+  border-radius: 8px;
+  margin: 0 auto;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.needle-center {
+  width: 22px;
+  height: 22px;
+  background: #2f6f9e;
+  border-radius: 50%;
+  margin: -4px auto 0;
+  border: 4px solid #eaf6ff;
+}
+
+.gauge-label {
+  position: absolute;
+  font-size: 15px;
+  font-weight: 700;
+  color: #425466;
+}
+
+.gauge-underweight {
+  left: 18px;
+  bottom: 56px;
+  transform: rotate(-65deg);
+}
+
+.gauge-healthy {
+  left: 90px;
+  top: 28px;
+  transform: rotate(-26deg);
+}
+
+.gauge-overweight {
+  right: 86px;
+  top: 28px;
+  transform: rotate(24deg);
+}
+
+.gauge-obese {
+  right: 26px;
+  bottom: 54px;
+  transform: rotate(68deg);
+}
+
+.bmi-display {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2f3a4a;
+  margin-top: 8px;
+}
+
+.status-text {
+  font-size: 22px;
+  font-weight: 600;
+  color: #4b5563;
+  margin-top: 10px;
+}
+
+.tips-card h2 {
+  background: #f8e6a9;
+  color: #394150;
+  font-size: 42px;
+  font-weight: 800;
+  text-align: center;
+  padding: 20px;
+  border-radius: 18px;
+  margin: -8px -8px 26px -8px;
+}
+
+.tips-content h3 {
+  font-size: 28px;
+  color: #384252;
+  margin-bottom: 12px;
+  margin-top: 18px;
+}
+
+.tips-content p {
+  font-size: 24px;
+  line-height: 1.7;
+  color: #555f6d;
+  margin-bottom: 16px;
+}
+
+.tips-content ul {
+  padding-left: 26px;
+  margin-bottom: 18px;
+}
+
+.tips-content li {
+  font-size: 23px;
+  line-height: 1.8;
+  color: #5b6472;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 1200px) {
+  .bmi-page {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .bmi-card,
+  .tips-card {
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .tips-card {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .bmi-page {
+    padding: 20px 14px;
+    gap: 20px;
+  }
+
+  .bmi-card,
+  .tips-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .bmi-title {
+    font-size: 34px;
+  }
+
+  .toggle-btn {
+    font-size: 14px;
+    padding: 12px 10px;
+  }
+
+  .section-label {
+    font-size: 20px;
+  }
+
+  .input-box input {
+    height: 54px;
+    font-size: 18px;
+  }
+
+  .unit-text {
+    font-size: 18px;
+  }
+
+  .calculate-btn {
+    font-size: 22px;
+    padding: 14px;
+  }
+
+  .gauge-wrapper {
+    width: 300px;
+    height: 165px;
+  }
+
+  .gauge-segment {
+    width: 300px;
+    height: 300px;
+    border-width: 24px;
+  }
+
+  .gauge-label {
+    font-size: 11px;
+  }
+
+  .gauge-underweight {
+    left: 10px;
+    bottom: 38px;
+  }
+
+  .gauge-healthy {
+    left: 56px;
+    top: 18px;
+  }
+
+  .gauge-overweight {
+    right: 52px;
+    top: 18px;
+  }
+
+  .gauge-obese {
+    right: 12px;
+    bottom: 38px;
+  }
+
+  .bmi-display {
+    font-size: 22px;
+  }
+
+  .status-text {
+    font-size: 18px;
+  }
+
+  .tips-card h2 {
+    font-size: 28px;
+    padding: 16px;
+  }
+
+  .tips-content h3 {
+    font-size: 22px;
+  }
+
+  .tips-content p,
+  .tips-content li {
+    font-size: 18px;
+  }
+}
