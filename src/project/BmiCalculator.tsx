@@ -1,19 +1,21 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import "./BmiCalculator.css";
 
-type UnitSystem = "metric" | "us" | "";
+type UnitSystem = "metric" | "us";
 
 const BmiCalculator = () => {
   const [unitSystem, setUnitSystem] = useState<UnitSystem>("metric");
 
-  const [heightFeet, setHeightFeet] = useState<string>("");
-  const [heightInches, setHeightInches] = useState<string>("");
+  const [heightFeet, setHeightFeet] = useState<string>("5");
+  const [heightInches, setHeightInches] = useState<string>("8");
   const [weightKilogram, setWeightKilogram] = useState<string>("");
   const [weightPound, setWeightPound] = useState<string>("");
 
-  const [bmi, setBmi] = useState<number | null>(null);
-  const [bmiStatus, setBmiStatus] = useState<string>("");
+  const [bmi, setBmi] = useState<number | null>(28.5);
+  const [bmiStatus, setBmiStatus] = useState<string>("Overweight");
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [suggestion, setSuggestion] = useState<string>("");
 
   const getBmiStatus = (bmiValue: number) => {
     if (bmiValue < 18.5) return "Underweight";
@@ -22,8 +24,55 @@ const BmiCalculator = () => {
     return "Obese";
   };
 
+  const getSuggestion = async (
+    bmiValue: number,
+    bmiStatusValue: string,
+    currentWeightInKg: number,
+  ) => {
+    try {
+      setLoading(true);
+      setError("");
+      setSuggestion("");
+
+      const payload = {
+        bmi: bmiValue,
+        bmiStatus: bmiStatusValue,
+        heightFeet,
+        heightInches,
+        weight:
+          unitSystem === "metric"
+            ? weightKilogram
+            : Number(currentWeightInKg.toFixed(1)),
+        unitSystem,
+      };
+
+      const response = await fetch("http://localhost:5000/api/suggestion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setSuggestion("Failed to fetch suggestion.");
+        return;
+      }
+
+      setSuggestion(data.suggestion);
+    } catch (err) {
+      console.error(err);
+      setSuggestion("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const calculateBMI = () => {
     setError("");
+    setSuggestion("");
 
     const feet = Number(heightFeet);
     const inches = Number(heightInches);
@@ -35,9 +84,9 @@ const BmiCalculator = () => {
       return;
     }
 
-    if (feet < 0 || inches > 11) {
+    if (feet < 0 || inches < 0 || inches > 11) {
       setError(
-        "Height cannot be negative and height in inches is less than or equal to 11 .",
+        "Height cannot be negative and inches must be between 0 and 11.",
       );
       setBmi(null);
       setBmiStatus("");
@@ -84,133 +133,30 @@ const BmiCalculator = () => {
     }
 
     const bmiValue = weightInKg / (heightInMeters * heightInMeters);
-    const Bmi = Number(bmiValue.toFixed(1));
+    const finalBmi = Number(bmiValue.toFixed(1));
+    const finalStatus = getBmiStatus(finalBmi);
 
-    setBmi(Bmi);
-    setBmiStatus(getBmiStatus(Bmi));
+    setBmi(finalBmi);
+    setBmiStatus(finalStatus);
+    getSuggestion(finalBmi, finalStatus, weightInKg);
   };
 
-  const needleRotation = useMemo(() => {
-    if (bmi === null) return -90;
-
-    const clampedBmi = Math.max(10, Math.min(bmi, 40));
-    const minBmi = 10;
-    const maxBmi = 40;
-    const angle = ((clampedBmi - minBmi) / (maxBmi - minBmi)) * 180 - 90;
-
-    return angle;
-  }, [bmi]);
-
-  const tips = useMemo(() => {
-    if (bmi === null) {
-      return {
-        title: "Health Insights:",
-        summary:
-          "Enter your height and weight to get BMI result and personalized health tips.",
-        steps: [
-          "Aim for balanced meals",
-          "Include colorful fruits and vegetables",
-          "Choose whole grains over refined ones",
-        ],
-        suggestions: [
-          "Regular physical activity: aim for 150 minutes per week",
-          "Try yoga, walking, jogging, or cycling",
-          "Consult a qualified professional for personalized advice",
-        ],
-      };
-    }
-
-    if (bmi < 18.5) {
-      return {
-        title: "Health Insights:",
-        summary:
-          "Your BMI is in the Underweight range. Focus on nutritious, calorie-dense meals and strength-building activities.",
-        steps: [
-          "Eat small frequent meals",
-          "Include protein-rich foods",
-          "Add healthy fats like nuts and seeds",
-        ],
-        suggestions: [
-          "Strength training can help build muscle mass",
-          "Do not skip meals",
-          "Consult a qualified professional if weight loss is unintentional",
-        ],
-      };
-    }
-
-    if (bmi < 25) {
-      return {
-        title: "Health Insights:",
-        summary:
-          "Your BMI is in the Healthy Weight range. Maintain your current habits with balanced nutrition and regular activity.",
-        steps: [
-          "Aim for balanced meals",
-          "Include colorful fruits and vegetables",
-          "Stay hydrated and sleep well",
-        ],
-        suggestions: [
-          "Regular physical activity: aim for 150 minutes per week",
-          "Mix cardio with strength training",
-          "Continue healthy routines consistently",
-        ],
-      };
-    }
-
-    if (bmi < 30) {
-      return {
-        title: "Health Insights:",
-        summary:
-          "Your BMI is in the Overweight range. Gradual lifestyle changes can support healthy weight management.",
-        steps: [
-          "Aim for balanced meals",
-          "Include colorful fruits and vegetables",
-          "Choose whole grains over refined ones",
-        ],
-        suggestions: [
-          "Regular physical activity: aim for 150 minutes per week",
-          "Try yoga and pranayama",
-          "Consult a qualified professional",
-        ],
-      };
-    }
-
-    return {
-      title: "Health Insights:",
-      summary:
-        "Your BMI is in the Obese range. A structured plan with healthy eating and regular activity can be helpful.",
-      steps: [
-        "Control portion sizes",
-        "Limit sugary drinks and processed foods",
-        "Increase fiber and protein intake",
-      ],
-      suggestions: [
-        "Start with low-impact exercise like walking",
-        "Build sustainable daily habits",
-        "Consult a qualified professional for guidance",
-      ],
-    };
-  }, [bmi]);
-
   return (
-    <div className="bmi-page">
-      <div className="bmi-card">
+    <div className="bmi-page" style={{ display: "flex" }}>
+      <div className="bmi-card" style={{ width: "50%" }}>
         <h1 className="bmi-title">BMI Calculator</h1>
 
         <div className="unit-toggle">
           <button
             className={`toggle-btn ${unitSystem === "metric" ? "active" : ""}`}
-            onClick={() =>
-              setUnitSystem(unitSystem === "metric" ? "" : "metric")
-            }
-            type="button"
+            onClick={() => setUnitSystem("metric")}
           >
             Metric (kg, feet/inches)
           </button>
 
           <button
             className={`toggle-btn ${unitSystem === "us" ? "active" : ""}`}
-            onClick={() => setUnitSystem(unitSystem === "us" ? "" : "us")}
-            type="button"
+            onClick={() => setUnitSystem("us")}
           >
             US Customary (lbs, feet/inches)
           </button>
@@ -221,124 +167,144 @@ const BmiCalculator = () => {
 
           <div className="input-row">
             <div className="input-box">
+              <span className="input-icon">📏</span>
               <input
                 type="number"
-                min="0"
                 value={heightFeet}
                 onChange={(e) => setHeightFeet(e.target.value)}
-                placeholder="Feet"
               />
-              <span className="unit-text">ft</span>
+              <span className="input-unit">ft</span>
+              <span className="input-placeholder">Feet</span>
             </div>
 
             <div className="input-box">
+              <span className="input-icon">↕</span>
               <input
                 type="number"
-                min="0"
                 value={heightInches}
                 onChange={(e) => setHeightInches(e.target.value)}
-                placeholder="Inches"
               />
-              <span className="unit-text">in</span>
+              <span className="input-unit">in</span>
+              <span className="input-placeholder">Inches</span>
             </div>
           </div>
+        </div>
 
+        <div className="form-section">
           <label className="section-label">Weight:</label>
+
+          <div className="weight-label-row">
+            <span className="weight-label-spacer"></span>
+            <span className="weight-label-text">
+              {unitSystem === "metric" ? "Kilograms (kg)" : "Pounds (lbs)"}
+            </span>
+          </div>
 
           <div className="input-row">
             {unitSystem === "metric" ? (
-              <div className="input-box full-width">
-                <input
-                  type="number"
-                  min="0"
-                  value={weightKilogram}
-                  onChange={(e) => setWeightKilogram(e.target.value)}
-                  placeholder="Kilograms (kg)"
-                />
-                <span className="unit-text">kg</span>
-              </div>
+              <>
+                <div className="select-box large">
+                  <span className="input-icon">⚖</span>
+                  <input
+                    type="number"
+                    placeholder="Kilograms (kg)"
+                    value={weightKilogram}
+                    onChange={(e) => setWeightKilogram(e.target.value)}
+                  />
+                  <span className="dropdown-arrow">⌄</span>
+                </div>
+
+                <div className="select-box small">
+                  <input type="text" value="Pounds (lbs)" />
+                  <span className="dropdown-arrow">⌄</span>
+                </div>
+              </>
             ) : (
-              <div className="input-box full-width">
-                <input
-                  type="number"
-                  min="0"
-                  value={weightPound}
-                  onChange={(e) => setWeightPound(e.target.value)}
-                  placeholder="Pounds (lbs)"
-                />
-                <span className="unit-text">lbs</span>
-              </div>
+              <>
+                <div className="select-box large">
+                  <span className="input-icon">⚖</span>
+                  <input type="text" value="Kilograms (kg)" />
+                  <span className="dropdown-arrow">⌄</span>
+                </div>
+
+                <div className="select-box small">
+                  <input
+                    type="number"
+                    placeholder="Pounds (lbs)"
+                    value={weightPound}
+                    onChange={(e) => setWeightPound(e.target.value)}
+                  />
+                  <span className="dropdown-arrow">⌄</span>
+                </div>
+              </>
             )}
           </div>
+        </div>
 
-          <button
-            className="calculate-btn"
-            onClick={calculateBMI}
-            type="button"
-          >
-            Calculate BMI
-          </button>
+        <button className="calculate-btn" onClick={calculateBMI}>
+          Calculate BMI
+        </button>
 
-          {error && <p className="error-text">{error}</p>}
+        {error && <p className="error-text">{error}</p>}
+        {loading && <p className="loading-text">Generating suggestion...</p>}
 
-          <div className="gauge-card">
-            <div className="gauge-wrapper">
-              <div className="gauge-segment underweight-segment"></div>
-              <div className="gauge-segment healthy-segment"></div>
-              <div className="gauge-segment overweight-segment"></div>
-              <div className="gauge-segment obese-segment"></div>
+        <div className="gauge-wrapper">
+          <div className="gauge">
+            <div
+              className={`gauge-segment segment-underweight ${bmiStatus === "Underweight" ? "active" : ""}`}
+            ></div>
+            <div
+              className={`gauge-segment segment-healthy ${bmiStatus === "Healthy Weight" ? "active" : ""}`}
+            ></div>
+            <div
+              className={`gauge-segment segment-overweight ${bmiStatus === "Overweight" ? "active" : ""}`}
+            ></div>
+            <div
+              className={`gauge-segment segment-obese ${bmiStatus === "Obese" ? "active" : ""}`}
+            ></div>
 
-              <div
-                className="gauge-needle"
-                style={{
-                  transform: `translateX(-50%) rotate(${needleRotation}deg)`,
-                }}
-              >
-                <div className="needle-line"></div>
-                <div className="needle-center"></div>
-              </div>
+            <div className="gauge-cutout"></div>
 
-              <div className="gauge-label gauge-underweight">Underweight</div>
-              <div className="gauge-label gauge-healthy">Healthy Weight</div>
-              <div className="gauge-label gauge-overweight">Overweight</div>
-              <div className="gauge-label gauge-obese">Obese</div>
-            </div>
+            <span
+              className={`gauge-text label-underweight ${bmiStatus === "Underweight" ? "active-text" : ""}`}
+            >
+              Underweight
+            </span>
+            <span
+              className={`gauge-text label-healthy ${bmiStatus === "Healthy Weight" ? "active-text" : ""}`}
+            >
+              Healthy Weight
+            </span>
+            <span
+              className={`gauge-text label-overweight ${bmiStatus === "Overweight" ? "active-text" : ""}`}
+            >
+              Overweight
+            </span>
+            <span
+              className={`gauge-text label-obese ${bmiStatus === "Obese" ? "active-text" : ""}`}
+            >
+              Obese
+            </span>
 
-            <p className="bmi-display">
-              BMI: <strong>{bmi !== null ? bmi : "--"}</strong>
+            <div className="bmi-result">BMI: {bmi !== null ? bmi : "--"}</div>
+          </div>
+        </div>
+
+        {bmi !== null && (
+          <div className="status-box">
+            <p>
+              <strong>Status:</strong> {bmiStatus}
             </p>
-
-            {bmiStatus && (
-              <p className="status-text">
-                Status: <strong>{bmiStatus}</strong>
-              </p>
-            )}
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="tips-card">
-        <h2>Personalized Health Tips</h2>
-
-        <div className="tips-content">
-          <h3>{tips.title}</h3>
-          <p>{tips.summary}</p>
-
-          <h3>Practical Steps for Weight Management:</h3>
-          <ul>
-            {tips.steps.map((step, index) => (
-              <li key={index}>{step}</li>
-            ))}
-          </ul>
-
-          <h3>Diet & Activity Suggestions (Indian & Global Context)</h3>
-          <ul>
-            {tips.suggestions.map((item, index) => (
-              <li key={index}>{item}</li>
-            ))}
-          </ul>
+      {suggestion && (
+        <div className="suggestion-box" style={{ width: "50%" }}>
+          <h1 className="bmi-title">Suggestion</h1>
+          <p> {suggestion} </p>
         </div>
-      </div>
+      )}
     </div>
   );
 };
